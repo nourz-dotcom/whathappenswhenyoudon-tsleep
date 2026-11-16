@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The 8-Hour Edge — Sleep Simulator</title>
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f5ff;color:#172554}
+.hero{min-height:92vh;display:grid;place-items:center;text-align:center;padding:35px 18px;
+background:linear-gradient(135deg,#dbeafe,#fce7f3 55%,#fef3c7)}
+.hero-inner{max-width:850px}
+.moon{font-size:70px;animation:float 2.8s ease-in-out infinite}
+h1{font-size:clamp(40px,8vw,76px);line-height:1.05;margin:12px 0}
+.hero p{font-size:20px;line-height:1.6;max-width:700px;margin:0 auto 28px}
+.go{display:inline-block;padding:15px 25px;background:#172554;color:#fff;border-radius:30px;text-decoration:none;font-weight:bold}
+
+section{max-width:1100px;margin:auto;padding:65px 18px}
+h2{text-align:center;font-size:38px;margin:0 0 10px}
+.sub{text-align:center;max-width:700px;margin:0 auto 30px;color:#64748b;line-height:1.6}
+
+/* CSS-only interactive controls */
+input{position:absolute;opacity:0;pointer-events:none}
+.hour-buttons{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.hour-buttons label{cursor:pointer;padding:13px 18px;background:white;border-radius:22px;font-weight:bold;
+box-shadow:0 5px 15px #0001;transition:.2s}
+.hour-buttons label:hover{transform:translateY(-3px)}
+#h4:checked~.hour-buttons label[for=h4],
+#h5:checked~.hour-buttons label[for=h5],
+#h6:checked~.hour-buttons label[for=h6],
+#h7:checked~.hour-buttons label[for=h7],
+#h8:checked~.hour-buttons label[for=h8],
+#h9:checked~.hour-buttons label[for=h9],
+#h10:checked~.hour-buttons label[for=h10],
+#h11:checked~.hour-buttons label[for=h11],
+#h12:checked~.hour-buttons label[for=h12]{background:#172554;color:white;transform:translateY(-4px)}
+
+.sim{background:#172554;border-radius:35px;color:white;overflow:hidden;padding:30px 18px;text-align:center}
+.panel{display:none}
+#h4:checked~.sim .p4,#h5:checked~.sim .p5,#h6:checked~.sim .p6,#h7:checked~.sim .p7,
+#h8:checked~.sim .p8,#h9:checked~.sim .p9,#h10:checked~.sim .p10,#h11:checked~.sim .p11,#h12:checked~.sim .p12{display:block}
+
+.big{font-size:30px;font-weight:800}
+.message{font-size:18px;line-height:1.55;color:#dbeafe;max-width:720px;margin:8px auto 0}
+.scene{height:310px;position:relative;max-width:680px;margin:5px auto 0}
+.window{position:absolute;right:8%;top:18px;width:145px;height:115px;border:8px solid #93c5fd;border-radius:18px;background:#bfdbfe;overflow:hidden}
+.sun,.mmoon{position:absolute;font-size:55px;transition:.6s}
+.sun{left:20px;top:25px}.mmoon{right:18px;top:15px}
+.bed{position:absolute;left:10%;bottom:38px;width:80%;height:92px;background:#f9a8d4;border-radius:28px 28px 10px 10px}
+.pillow{position:absolute;left:7%;top:12px;width:120px;height:50px;background:#fff;border-radius:30px}
+.person{position:absolute;left:42%;bottom:78px;font-size:85px}
+.zzz{position:absolute;right:23%;top:90px;font-size:35px;line-height:.7}
+.battery{position:absolute;left:8%;top:20px;font-size:42px}
+
+/* Different visual states */
+.p4 .person,.p5 .person{animation:shake .45s infinite}
+.p6 .person,.p7 .person{animation:sleepy 1.2s infinite}
+.p8 .person,.p9 .person,.p10 .person{animation:happy .9s infinite}
+.p11 .person,.p12 .person{animation:sleepy 1.5s infinite}
+.p4 .battery,.p5 .battery{filter:grayscale(1)}
+.p8 .battery,.p9 .battery,.p10 .battery{filter:drop-shadow(0 0 12px #fde68a)}
+.p4 .zzz,.p5 .zzz,.p6 .zzz{display:block}
+.p7 .zzz,.p8 .zzz,.p9 .zzz,.p10 .zzz,.p11 .zzz,.p12 .zzz{display:none}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.card{padding:24px;border-radius:25px;min-height:175px}
+.card:nth-child(1){background:#fbcfe8}.card:nth-child(2){background:#bfdbfe}.card:nth-child(3){background:#fde68a}
+.card:nth-child(4){background:#bbf7d0}.card:nth-child(5){background:#ddd6fe}.card:nth-child(6){background:#bae6fd}
+.icon{font-size:38px}.card h3{font-size:21px;margin:8px 0}.card p{color:#475569;line-height:1.5;margin:0}
+.tip{background:white;border-radius:25px;padding:25px;box-shadow:0 8px 25px #0001}
+footer{text-align:center;padding:35px;background:#e0e7ff;line-height:1.6}
+@keyframes float{50%{transform:translateY(-12px)}}
+@keyframes sleepy{50%{transform:translateY(7px) rotate(3deg)}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes happy{50%{transform:translateY(-12px) rotate(-3deg)}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+<div class="hero-inner">
+<div class="moon">🌙</div>
+<h1>What Happens When You Don't Sleep?</h1>
+<p>Choose your sleep hours below and watch the student scene change. No app or JavaScript is needed.</p>
+<a class="go" href="#simulator">Start the simulator ↓</a>
+</div>
+</header>
+
+<section id="simulator">
+<h2>🎚️ Choose your sleep hours</h2>
+<p class="sub">Tap a number. The picture, movement and message change automatically.</p>
+
+<input id="h4" name="sleep" type="radio">
+<input id="h5" name="sleep" type="radio">
+<input id="h6" name="sleep" type="radio" checked>
+<input id="h7" name="sleep" type="radio">
+<input id="h8" name="sleep" type="radio">
+<input id="h9" name="sleep" type="radio">
+<input id="h10" name="sleep" type="radio">
+<input id="h11" name="sleep" type="radio">
+<input id="h12" name="sleep" type="radio">
+
+<div class="hour-buttons">
+<label for="h4">4 hours</label><label for="h5">5 hours</label><label for="h6">6 hours</label>
+<label for="h7">7 hours</label><label for="h8">8 hours</label><label for="h9">9 hours</label>
+<label for="h10">10 hours</label><label for="h11">11 hours</label><label for="h12">12 hours</label>
+</div>
+
+<div class="sim">
+<div class="panel p4"><div class="big">4 hours 😵‍💫</div><div class="message">Very little sleep. You may feel extremely tired and find focusing on schoolwork difficult.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🪫</div><div class="zzz">Z<br>z<br>z</div><div class="bed"><div class="pillow"></div></div><div class="person">😵‍💫</div></div></div>
+<div class="panel p5"><div class="big">5 hours 😴</div><div class="message">Low sleep can leave you sleepy, less focused and more irritable during the day.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🪫</div><div class="zzz">Z<br>z<br>z</div><div class="bed"><div class="pillow"></div></div><div class="person">😴</div></div></div>
+<div class="panel p6"><div class="big">6 hours 🥱</div><div class="message">You may notice tiredness, reduced concentration and changes in mood.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="zzz">Z<br>z<br>z</div><div class="bed"><div class="pillow"></div></div><div class="person">🥱</div></div></div>
+<div class="panel p7"><div class="big">7 hours 🙂</div><div class="message">Almost there, but many teenagers still need more sleep to fully recharge.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="bed"><div class="pillow"></div></div><div class="person">🙂</div></div></div>
+<div class="panel p8"><div class="big">8 hours 🌟</div><div class="message">Around 8 hours can support attention, memory, mood and daytime energy.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="bed"><div class="pillow"></div></div><div class="person">😊</div></div></div>
+<div class="panel p9"><div class="big">9 hours ✨</div><div class="message">A night in the recommended range gives your brain and body time to recover.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="bed"><div class="pillow"></div></div><div class="person">😊</div></div></div>
+<div class="panel p10"><div class="big">10 hours 🌙</div><div class="message">10 hours is within the recommended range for many teenagers.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="bed"><div class="pillow"></div></div><div class="person">😌</div></div></div>
+<div class="panel p11"><div class="big">11 hours 😌</div><div class="message">More sleep is not always better. If this happens often, talk with a trusted adult or healthcare professional.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="bed"><div class="pillow"></div></div><div class="person">😌</div></div></div>
+<div class="panel p12"><div class="big">12 hours 😴</div><div class="message">Occasionally sleeping longer can happen. Regularly needing this much sleep is worth discussing with a healthcare professional.</div><div class="scene"><div class="window"><span class="sun">☀️</span><span class="mmoon">🌙</span></div><div class="battery">🔋</div><div class="bed"><div class="pillow"></div></div><div class="person">😴</div></div></div>
+</div>
+</section>
+
+<section>
+<h2>What can happen with too little sleep?</h2>
+<p class="sub">Regularly getting less sleep than you need can affect different parts of your day.</p>
+<div class="cards">
+<div class="card"><div class="icon">🧠</div><h3>Harder to focus</h3><p>Paying attention and staying focused in class can become more difficult.</p></div>
+<div class="card"><div class="icon">🔋</div><h3>Less energy</h3><p>You may feel tired and have less motivation during the day.</p></div>
+<div class="card"><div class="icon">😕</div><h3>Mood changes</h3><p>You may become more irritable or feel more stressed.</p></div>
+<div class="card"><div class="icon">🛡️</div><h3>Immune support</h3><p>Not enough sleep can affect normal immune system function.</p></div>
+<div class="card"><div class="icon">📚</div><h3>Memory</h3><p>Sleep helps your brain process and remember what you learned.</p></div>
+<div class="card"><div class="icon">❤️</div><h3>Long-term health</h3><p>Ongoing insufficient sleep is linked with several health risks.</p></div>
+</div>
+</section>
+
+<section>
+<div class="tip">
+<h2>🌙 The 8-Hour Edge</h2>
+<p class="sub">Teenagers generally need about 8–10 hours of sleep each night. Good sleep supports learning, mood, energy and wellbeing.</p>
+</div>
+</section>
+
+<footer><b>The 8-Hour Edge: Sleep More, Score More</b><br>Better sleep supports a healthier, happier school day.</footer>
+</body>
+</html>
